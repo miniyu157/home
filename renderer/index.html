@@ -5,536 +5,233 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>Dialogue Renderer</title>
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/remixicon@4.2.0/fonts/remixicon.css" rel="stylesheet" />
   <script type="module">
     import 'https://esm.run/@material/web/iconbutton/icon-button.js';
     import 'https://esm.run/@material/web/ripple/ripple.js';
   </script>
-  <style>
-    :root {
-      --md-sys-color-background: #f4f5f8;
-      --md-sys-color-surface: #ffffff;
-      --md-sys-color-surface-container-low: #f8f9fb;
-      --md-sys-color-surface-container: #ffffff;
-      --md-sys-color-on-surface: #191c20;
-      --md-sys-color-on-surface-variant: #5c5f65;
-      --md-sys-color-outline-variant: #e1e3e8;
-      --md-sys-color-primary: #005ac1;
-      --md-sys-color-error: #ba1a1a;
-      
-      --md-sys-shape-corner-medium: 16px;
-      --md-sys-shape-corner-large: 24px;
-      
-      --md-sys-elevation-3: 0px 4px 12px 0px rgba(0,0,0,0.05), 0px 1px 4px 0px rgba(0,0,0,0.02);
-      
-      --space-xs: 4px;
-      --space-sm: 8px;
-      --space-md: 16px;
-      --space-lg: 24px;
-      
-      --font-size: 16px;
-      --line-height: 1.6;
-      --code-line-height: 1.4;
-      --font-fallback: Roboto, -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", sans-serif;
-      --font-family: var(--font-fallback);
-      --font-family-mono: ui-monospace, SFMono-Regular, Consolas, Menlo, monospace;
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            md: {
+              bg: 'var(--md-bg)',
+              surface: 'var(--md-surface)',
+              surfaceLow: 'var(--md-surfaceLow)',
+              onSurface: 'var(--md-onSurface)',
+              onSurfaceVariant: 'var(--md-onSurfaceVariant)',
+              outlineVariant: 'var(--md-outlineVariant)',
+              primary: 'var(--md-primary)',
+              error: 'var(--md-error)',
+              codeBg: 'var(--md-code-bg)',
+              codeText: 'var(--md-code-text)',
+              msgBorder: 'var(--md-msg-border)',
+              msgBorderHover: 'var(--md-msg-border-hover)'
+            }
+          },
+          fontFamily: {
+            sans: ['var(--font-family)', 'Roboto', '-apple-system', 'sans-serif'],
+            mono: ['var(--font-family-mono)', 'monospace']
+          },
+          boxShadow: {
+            'elevation-3': '0px 4px 12px 0px rgba(0,0,0,0.05), 0px 1px 4px 0px rgba(0,0,0,0.02)',
+            'segment': '0px 1px 3px rgba(0,0,0,0.1)'
+          }
+        }
+      }
+    }
+  </script>
+  <style type="text/tailwindcss">
+    @layer base {
+      :root {
+        --font-size: 16px;
+        --line-height: 1.6;
+        --code-line-height: 1.4;
+        --font-fallback: Roboto, -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", sans-serif;
+        --font-family: var(--font-fallback);
+        --font-family-mono: ui-monospace, SFMono-Regular, Consolas, Menlo, monospace;
+        
+        --md-bg: #f4f5f8;
+        --md-surface: #ffffff;
+        --md-surfaceLow: #f8f9fb;
+        --md-onSurface: #191c20;
+        --md-onSurfaceVariant: #5c5f65;
+        --md-outlineVariant: #e1e3e8;
+        --md-primary: #005ac1;
+        --md-error: #ba1a1a;
+        --md-code-bg: #1a1b1e;
+        --md-code-text: #e4e5e9;
+        --md-msg-border: rgba(225, 227, 232, 0.4);
+        --md-msg-border-hover: rgba(225, 227, 232, 0.85);
+      }
+
+      .dark {
+        --md-bg: #0f1115;
+        --md-surface: #191c20;
+        --md-surfaceLow: #14171a;
+        --md-onSurface: #e1e3e8;
+        --md-onSurfaceVariant: #a0a3ab;
+        --md-outlineVariant: #44474e;
+        --md-primary: #a8c7fa;
+        --md-error: #ffb4ab;
+        --md-code-bg: #111215;
+        --md-code-text: #c4c7c5;
+        --md-msg-border: rgba(68, 71, 78, 0.3);
+        --md-msg-border-hover: rgba(68, 71, 78, 0.7);
+      }
+
+      * {
+        -webkit-tap-highlight-color: transparent;
+      }
+      html {
+        font-size: var(--font-size);
+      }
+      body {
+        line-height: var(--line-height);
+      }
     }
 
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      -webkit-tap-highlight-color: transparent;
+    @layer components {
+      .sidebar-transition {
+        transition: transform 0.3s cubic-bezier(0.2, 0, 0, 1), margin-left 0.3s cubic-bezier(0.2, 0, 0, 1);
+      }
+      .dropdown-transition {
+        transform-origin: top right;
+        transition: opacity 0.3s cubic-bezier(0.2, 0, 0, 1), transform 0.3s cubic-bezier(0.2, 0, 0, 1), visibility 0.3s;
+      }
+      .dropdown-hidden {
+        opacity: 0;
+        visibility: hidden;
+        transform: scale(0.9) translate(15px, -15px);
+      }
+      .dropdown-visible {
+        opacity: 1;
+        visibility: visible;
+        transform: scale(1) translate(0, 0);
+      }
+
+      .message-preview {
+        transform-origin: left center;
+        animation: previewIn 0.35s cubic-bezier(0.2, 0, 0, 1) forwards;
+      }
+      .message:not(.is-collapsed) .message-preview {
+        animation: previewOut 0.35s cubic-bezier(0.2, 0, 0, 1) forwards;
+      }
+
+      .message-body {
+        display: grid;
+        grid-template-rows: 0fr;
+        transition: grid-template-rows 0.35s cubic-bezier(0.2, 0, 0, 1);
+      }
+      .message:not(.is-collapsed) .message-body {
+        grid-template-rows: 1fr;
+      }
+      .message-body-inner {
+        min-height: 0;
+        overflow: hidden;
+        opacity: 0;
+        transition: opacity 0.2s cubic-bezier(0.2, 0, 0, 1);
+      }
+      .message:not(.is-collapsed) .message-body-inner {
+        opacity: 1;
+        transition: opacity 0.35s cubic-bezier(0.2, 0, 0, 1) 0.05s;
+      }
+
+      .md-body h1, .md-body h2, .md-body h3 { @apply mt-[1.2em] mb-[0.6em] font-semibold text-md-onSurface; }
+      .md-body h1:first-child, .md-body h2:first-child { @apply mt-0; }
+      .md-body p, .md-body ul, .md-body ol { @apply mb-[1em]; }
+      .md-body p:last-child, .md-body ul:last-child, .md-body ol:last-child { @apply mb-0; }
+      .md-body ul, .md-body ol { @apply pl-[1.5em]; list-style-type: disc; }
+      .md-body code { @apply font-mono text-[0.875em] bg-md-surfaceLow text-md-primary px-[0.4em] py-[0.2em] rounded-[4px] border border-md-outlineVariant; }
+      .md-body pre { @apply bg-md-codeBg text-md-codeText p-4 rounded-[16px] overflow-x-auto my-[1.2em] border border-md-outlineVariant; line-height: var(--code-line-height); }
+      .md-body pre code { @apply bg-transparent p-0 text-inherit border-none; }
+      .md-body a { @apply text-md-primary font-medium no-underline; }
+      .md-body a:hover { @apply underline; }
+
+      @media (max-width: 840px) {
+        .sidebar-responsive { @apply fixed h-full max-w-[85vw] -translate-x-full; }
+        .sidebar-responsive.is-active { @apply translate-x-0; }
+        .sidebar-overlay-responsive.is-active { @apply opacity-100 visible; }
+      }
+      @media (min-width: 841px) {
+        .sidebar-responsive:not(.is-active) { margin-left: -320px; }
+        .sidebar-overlay-responsive { display: none !important; }
+      }
     }
 
-    html {
-      font-size: var(--font-size);
+    @keyframes previewOut {
+      0% { transform: scale(1); opacity: 1; pointer-events: none; }
+      100% { transform: scale(0.95); opacity: 0; pointer-events: none; }
     }
-
-    body {
-      font-family: var(--font-family);
-      line-height: var(--line-height);
-      background-color: var(--md-sys-color-background);
-      color: var(--md-sys-color-on-surface);
-      -webkit-font-smoothing: antialiased;
-      height: 100dvh;
-      overflow: hidden;
-    }
-
-    .layout-wrapper {
-      display: flex;
-      height: 100%;
-      width: 100%;
-    }
-
-    .sidebar {
-      width: 320px;
-      flex-shrink: 0;
-      background-color: var(--md-sys-color-surface);
-      border-right: 1px solid var(--md-sys-color-outline-variant);
-      display: flex;
-      flex-direction: column;
-      transition: transform 0.3s cubic-bezier(0.2, 0, 0, 1), margin-left 0.3s cubic-bezier(0.2, 0, 0, 1);
-      z-index: 300;
-    }
-
-    .sidebar-header {
-      padding: calc(var(--space-md) + env(safe-area-inset-top)) var(--space-md) var(--space-md);
-      border-bottom: 1px solid var(--md-sys-color-outline-variant);
-      font-weight: 600;
-      font-size: 1.125rem;
-      color: var(--md-sys-color-on-surface);
-      display: flex;
-      align-items: center;
-      gap: var(--space-sm);
-    }
-
-    .file-list {
-      flex: 1;
-      overflow-y: auto;
-      padding: var(--space-sm);
-      list-style: none;
-      padding-bottom: env(safe-area-inset-bottom);
-    }
-
-    .file-item {
-      padding: 12px 16px;
-      border-radius: var(--space-sm);
-      cursor: pointer;
-      font-size: 0.9375rem;
-      color: var(--md-sys-color-on-surface-variant);
-      display: flex;
-      align-items: center;
-      gap: var(--space-sm);
-      transition: background-color 0.2s, color 0.2s;
-      word-break: break-all;
-    }
-
-    .file-item i { font-size: 1.25rem; flex-shrink: 0; }
-    .file-item:hover { background-color: var(--md-sys-color-surface-container-low); color: var(--md-sys-color-on-surface); }
-    .file-item.is-selected { background-color: var(--md-sys-color-primary); color: #ffffff; }
-    .file-item.is-error { color: var(--md-sys-color-error); cursor: not-allowed; }
-
-    .sidebar-overlay {
-      position: fixed;
-      inset: 0;
-      background-color: rgba(0, 0, 0, 0.3);
-      backdrop-filter: blur(2px);
-      -webkit-backdrop-filter: blur(2px);
-      z-index: 250;
-      opacity: 0;
-      visibility: hidden;
-      transition: opacity 0.3s cubic-bezier(0.2, 0, 0, 1), visibility 0.3s;
-    }
-
-    .main-wrapper {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      min-width: 0;
-      overflow-y: auto;
-      position: relative;
-    }
-
-    .app-header {
-      position: sticky;
-      top: 0;
-      z-index: 100;
-      background-color: rgba(255, 255, 255, 0.85);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      border-bottom: 1px solid rgba(225, 227, 232, 0.6);
-      padding: calc(var(--space-md) + env(safe-area-inset-top)) var(--space-md) var(--space-md);
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .header-left {
-      display: flex;
-      align-items: center;
-      gap: var(--space-xs);
-    }
-
-    .app-title {
-      font-weight: 600;
-      font-size: 1.25rem;
-      letter-spacing: -0.01em;
-      padding-left: var(--space-xs);
-    }
-
-    .help-btn {
-      display: flex;
-      align-items: center;
-      gap: 4px;
-      background: transparent;
-      border: 1px solid var(--md-sys-color-outline-variant);
-      color: var(--md-sys-color-on-surface-variant);
-      padding: 4px 10px;
-      border-radius: var(--md-sys-shape-corner-medium);
-      font-size: 0.8125rem;
-      font-family: inherit;
-      cursor: pointer;
-      transition: background-color 0.15s, color 0.15s;
-      margin-left: var(--space-sm);
-      outline: none;
-    }
-
-    .help-btn:hover {
-      background: var(--md-sys-color-surface-container-low);
-      color: var(--md-sys-color-on-surface);
-    }
-
-    .actions {
-      display: flex;
-      align-items: center;
-      gap: var(--space-xs);
-      position: relative;
-    }
-
-    .dropdown-panel {
-      position: absolute;
-      top: 100%;
-      right: 0;
-      margin-top: var(--space-sm);
-      background-color: var(--md-sys-color-surface);
-      border-radius: var(--md-sys-shape-corner-medium);
-      box-shadow: var(--md-sys-elevation-3);
-      border: 1px solid var(--md-sys-color-outline-variant);
-      width: 280px;
-      padding: var(--space-md);
-      opacity: 0;
-      visibility: hidden;
-      transition: opacity 0.15s cubic-bezier(0.2, 0, 0, 1), visibility 0.15s;
-      z-index: 200;
-    }
-
-    .dropdown-panel.is-active { opacity: 1; visibility: visible; }
-
-    .setting-item {
-      display: flex;
-      flex-direction: column;
-      gap: var(--space-sm);
-      margin-bottom: var(--space-lg);
-    }
-
-    .setting-item:last-child { margin-bottom: 0; }
-
-    .setting-item label {
-      font-size: 0.75rem;
-      color: var(--md-sys-color-on-surface-variant);
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-    }
-
-    .setting-item input[type="text"] {
-      padding: 12px 14px;
-      border: 1px solid var(--md-sys-color-outline-variant);
-      border-radius: var(--space-sm);
-      font-family: inherit;
-      font-size: 0.9375rem;
-      outline: none;
-      background: var(--md-sys-color-surface-container-low);
-      color: var(--md-sys-color-on-surface);
-      transition: border-color 0.15s, background-color 0.15s;
-      width: 100%;
-    }
-
-    .setting-item input[type="text"]:focus {
-      border-color: var(--md-sys-color-primary);
-      background: var(--md-sys-color-surface);
-    }
-
-    .setting-control-group {
-      display: flex;
-      align-items: center;
-      gap: var(--space-sm);
-    }
-
-    .setting-control-group input { text-align: center; }
-
-    .step-btn {
-      background: var(--md-sys-color-surface-container-low);
-      border: 1px solid var(--md-sys-color-outline-variant);
-      color: var(--md-sys-color-on-surface-variant);
-      border-radius: var(--space-sm);
-      width: 44px;
-      height: 44px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      flex-shrink: 0;
-      transition: background-color 0.15s, color 0.15s;
-      font-size: 1.25rem;
-    }
-
-    .step-btn:hover { background: var(--md-sys-color-outline-variant); color: var(--md-sys-color-on-surface); }
-    .step-btn:active { opacity: 0.7; }
-
-    .app-main {
-      width: 100%;
-      max-width: 840px;
-      margin: 0 auto;
-      padding: var(--space-md) var(--space-md) calc(var(--space-lg) * 3 + env(safe-area-inset-bottom));
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
-
-    .empty-state {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 10vh 0;
-      color: var(--md-sys-color-on-surface-variant);
-      font-size: 0.9375rem;
-      gap: var(--space-sm);
-    }
-
-    .empty-state i { font-size: 2.5rem; opacity: 0.4; }
-
-    .message {
-      background-color: var(--md-sys-color-surface-container);
-      border-radius: var(--md-sys-shape-corner-large);
-      position: relative;
-      overflow: hidden;
-      box-shadow: 0px 1px 2px 0px rgba(0,0,0,0.02);
-      border: 1px solid rgba(225, 227, 232, 0.4);
-    }
-
-    .message-header {
-      padding: 18px var(--space-lg);
-      display: flex;
-      align-items: center;
-      gap: var(--space-md);
-      cursor: pointer;
-      user-select: none;
-      position: relative;
-      border-bottom: 1px solid transparent;
-      transition: border-bottom-color 0.2s cubic-bezier(0.2, 0, 0, 1);
-    }
-
-    .message:not(.is-collapsed) .message-header { border-bottom-color: rgba(225, 227, 232, 0.6); }
-
-    .message-num { font-size: 0.75rem; font-weight: 700; color: var(--md-sys-color-on-surface-variant); opacity: 0.5; }
-    .message-role { font-size: 0.9375rem; font-weight: 600; letter-spacing: 0.02em; color: var(--md-sys-color-on-surface); white-space: nowrap; }
-    
-    .message-preview { 
-      font-size: 0.9375rem; color: var(--md-sys-color-on-surface-variant); white-space: nowrap; 
-      overflow: hidden; text-overflow: ellipsis; flex: 1; 
-      transition: opacity 0.35s cubic-bezier(0.2, 0, 0, 1), transform 0.35s cubic-bezier(0.2, 0, 0, 1);
-    }
-    .message:not(.is-collapsed) .message-preview {
-      opacity: 0;
-      transform: translate(-50px, 36px);
-      pointer-events: none;
-    }
-
-    .message-body {
-      display: grid;
-      grid-template-rows: 0fr;
-      transition: grid-template-rows 0.35s cubic-bezier(0.2, 0, 0, 1);
-    }
-
-    .message:not(.is-collapsed) .message-body {
-      grid-template-rows: 1fr;
-    }
-
-    .message-body-inner {
-      min-height: 0;
-      overflow: hidden;
-      opacity: 0;
-      transition: opacity 0.2s cubic-bezier(0.2, 0, 0, 1);
-    }
-
-    .message:not(.is-collapsed) .message-body-inner {
-      opacity: 1;
-      transition: opacity 0.35s cubic-bezier(0.2, 0, 0, 1) 0.05s;
-    }
-
-    .message-content { 
-      padding: var(--space-md) var(--space-lg) var(--space-lg);
-      overflow-wrap: break-word; 
-      word-break: break-word; 
-      color: var(--md-sys-color-on-surface); 
-    }
-
-    .md-body h1, .md-body h2, .md-body h3 { margin: 1.2em 0 0.6em; font-weight: 600; color: var(--md-sys-color-on-surface); }
-    .md-body h1:first-child, .md-body h2:first-child { margin-top: 0; }
-    .md-body p, .md-body ul, .md-body ol { margin-bottom: 1em; }
-    .md-body p:last-child, .md-body ul:last-child, .md-body ol:last-child { margin-bottom: 0; }
-    .md-body ul, .md-body ol { padding-left: 1.5em; }
-    
-    .md-body code {
-      font-family: var(--font-family-mono);
-      font-size: 0.875em;
-      background-color: var(--md-sys-color-surface-container-low);
-      color: var(--md-sys-color-primary);
-      padding: 0.2em 0.4em;
-      border-radius: var(--space-xs);
-    }
-
-    .md-body pre {
-      background-color: #1a1b1e;
-      color: #e4e5e9;
-      padding: var(--space-md);
-      border-radius: var(--md-sys-shape-corner-medium);
-      overflow-x: auto;
-      margin: 1.2em 0;
-      line-height: var(--code-line-height);
-    }
-    .md-body pre code { background-color: transparent; padding: 0; color: inherit; }
-
-    .dnd-overlay {
-      position: fixed; inset: 0; z-index: 999;
-      background-color: rgba(255, 255, 255, 0.85);
-      backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
-      display: flex; align-items: center; justify-content: center;
-      opacity: 0; visibility: hidden;
-      transition: opacity 0.25s cubic-bezier(0.2, 0, 0, 1), visibility 0.25s;
-    }
-    .dnd-overlay.is-active { opacity: 1; visibility: visible; }
-    .dnd-content {
-      text-align: center; color: var(--md-sys-color-primary);
-      transform: scale(0.95); transition: transform 0.25s cubic-bezier(0.2, 0, 0, 1);
-    }
-    .dnd-overlay.is-active .dnd-content { transform: scale(1); }
-    .dnd-content i { font-size: 3rem; margin-bottom: var(--space-sm); display: block; }
-    .dnd-content span { font-size: 1.125rem; font-weight: 500; letter-spacing: 0.02em; }
-
-    .dialog-overlay {
-      position: fixed; inset: 0; z-index: 1000;
-      background-color: rgba(0, 0, 0, 0.4);
-      backdrop-filter: blur(2px); -webkit-backdrop-filter: blur(2px);
-      display: flex; align-items: center; justify-content: center;
-      opacity: 0; visibility: hidden;
-      transition: opacity 0.25s cubic-bezier(0.2, 0, 0, 1), visibility 0.25s;
-    }
-    .dialog-overlay.is-active { opacity: 1; visibility: visible; }
-    
-    .dialog-surface {
-      background-color: var(--md-sys-color-surface);
-      border-radius: var(--md-sys-shape-corner-large);
-      box-shadow: var(--md-sys-elevation-3);
-      width: 90%; max-width: 420px;
-      transform: scale(0.95) translateY(10px);
-      transition: transform 0.25s cubic-bezier(0.2, 0, 0, 1);
-      overflow: hidden;
-      display: flex; flex-direction: column;
-    }
-    .dialog-overlay.is-active .dialog-surface { transform: scale(1) translateY(0); }
-    
-    .dialog-body { padding: var(--space-lg); font-size: 0.9375rem; color: var(--md-sys-color-on-surface); line-height: var(--line-height); }
-    .dialog-body a { color: var(--md-sys-color-primary); text-decoration: none; font-weight: 500; }
-    .dialog-body a:hover { text-decoration: underline; }
-    .dialog-body > *:last-child { margin-bottom: 0; }
-    
-    .dialog-actions {
-      padding: 0 var(--space-lg) var(--space-md);
-      display: flex; justify-content: flex-end;
-    }
-    .dialog-btn {
-      background: var(--md-sys-color-primary);
-      color: #ffffff;
-      border: none;
-      padding: 8px 20px;
-      border-radius: 20px;
-      font-size: 0.875rem;
-      font-weight: 500;
-      cursor: pointer;
-      transition: opacity 0.15s;
-      font-family: inherit;
-    }
-    .dialog-btn:hover { opacity: 0.9; }
-    .dialog-btn:active { opacity: 0.8; }
-
-    @media (max-width: 840px) {
-      .sidebar { position: fixed; height: 100%; transform: translateX(-100%); max-width: 85vw; }
-      .sidebar.is-active { transform: translateX(0); }
-      .sidebar-overlay.is-active { opacity: 1; visibility: visible; }
-    }
-
-    @media (min-width: 841px) {
-      .sidebar:not(.is-active) { margin-left: -320px; }
-      .sidebar-overlay { display: none !important; }
+    @keyframes previewIn {
+      0% { transform: scale(0.95); opacity: 0; pointer-events: none; }
+      100% { transform: scale(1); opacity: 1; pointer-events: auto; }
     }
   </style>
 </head>
-<body>
+<body class="bg-md-bg text-md-onSurface font-sans antialiased h-[100dvh] overflow-hidden transition-colors duration-300">
 
-  <div class="dialog-overlay" id="helpDialog">
-    <div class="dialog-surface">
-      <div class="dialog-body md-body" id="helpDialogBody"></div>
-      <div class="dialog-actions">
-        <button class="dialog-btn" id="btnHelpConfirm">确定</button>
+  <div class="fixed inset-0 z-[1000] bg-black/40 backdrop-blur-[2px] flex items-center justify-center opacity-0 invisible transition-all duration-250 ease-[cubic-bezier(0.2,0,0,1)]" id="helpDialog">
+    <div class="bg-md-surface border border-md-outlineVariant rounded-[24px] shadow-elevation-3 w-[90%] max-w-[420px] scale-95 translate-y-2.5 transition-transform duration-250 ease-[cubic-bezier(0.2,0,0,1)] overflow-hidden flex flex-col dialog-surface-inner">
+      <div class="p-6 text-[0.9375rem] text-md-onSurface md-body" id="helpDialogBody"></div>
+      <div class="px-6 pb-4 flex justify-end">
+        <button class="bg-md-primary text-white border-none py-2 px-5 rounded-[20px] text-[0.875rem] font-medium cursor-pointer transition-opacity hover:opacity-90 active:opacity-80" id="btnHelpConfirm">确定</button>
       </div>
     </div>
   </div>
 
-  <div class="dnd-overlay" id="dndOverlay">
-    <div class="dnd-content">
-      <i class="ri-drag-drop-line"></i>
-      <span>释放文件以加载</span>
+  <div class="fixed inset-0 z-[999] bg-md-bg/85 backdrop-blur-[8px] flex items-center justify-center opacity-0 invisible transition-all duration-250 ease-[cubic-bezier(0.2,0,0,1)]" id="dndOverlay">
+    <div class="text-center text-md-primary scale-95 transition-transform duration-250 ease-[cubic-bezier(0.2,0,0,1)] dnd-content-inner">
+      <i class="ri-drag-drop-line text-5xl mb-2 block"></i>
+      <span class="text-[1.125rem] font-medium tracking-[0.02em]">释放文件以加载</span>
     </div>
   </div>
 
-  <div class="layout-wrapper">
-    <div class="sidebar-overlay" id="sidebarOverlay"></div>
-    <aside class="sidebar is-active" id="sidebar">
-      <div class="sidebar-header">
-        <i class="ri-folder-open-fill"></i> 工作区
+  <div class="flex h-full w-full">
+    <div class="fixed inset-0 bg-black/40 backdrop-blur-[2px] z-[250] opacity-0 invisible transition-all duration-300 ease-[cubic-bezier(0.2,0,0,1)] sidebar-overlay-responsive" id="sidebarOverlay"></div>
+    
+    <aside class="w-[320px] shrink-0 bg-md-surface border-r border-md-outlineVariant flex flex-col z-[300] sidebar-transition sidebar-responsive is-active" id="sidebar">
+      <div class="pt-[calc(16px+env(safe-area-inset-top))] px-4 pb-4 border-b border-md-outlineVariant font-semibold text-[1.125rem] text-md-onSurface flex items-center gap-2">
+        <i class="ri-folder-open-fill text-md-primary"></i> 工作区
       </div>
-      <ul class="file-list" id="fileList">
-        <div class="empty-state" style="padding: 30vh 0; border: none;">
-          <i class="ri-folder-open-line"></i>
+      <ul class="flex-1 overflow-y-auto p-2 list-none pb-[env(safe-area-inset-bottom)]" id="fileList">
+        <div class="flex flex-col items-center justify-center py-[30vh] text-md-onSurfaceVariant text-[0.9375rem] gap-2 border-none">
+          <i class="ri-folder-open-line text-[2.5rem] opacity-40"></i>
           <span>请选择包含 JSON 的文件夹</span>
         </div>
       </ul>
     </aside>
 
-    <div class="main-wrapper">
-      <header class="app-header">
-        <div class="header-left">
-          <md-icon-button id="btnSidebarToggle">
-            <i class="ri-menu-4-line"></i>
-          </md-icon-button>
-          <div class="app-title">Renderer</div>
-          <button class="help-btn" id="btnHelp">
+    <div class="flex-1 flex flex-col min-w-0 overflow-y-auto relative">
+      <header class="sticky top-0 z-[100] bg-md-surface/85 backdrop-blur-[20px] border-b border-md-outlineVariant pt-[calc(16px+env(safe-area-inset-top))] px-4 pb-4 flex justify-between items-center transition-colors duration-300">
+        <div class="flex items-center gap-1">
+          <md-icon-button id="btnSidebarToggle"><i class="ri-menu-4-line text-md-onSurface"></i></md-icon-button>
+          <div class="font-semibold text-[1.25rem] tracking-[-0.01em] pl-1 text-md-onSurface">Renderer</div>
+          <button class="flex items-center gap-1 bg-transparent border border-md-outlineVariant text-md-onSurfaceVariant py-1 px-2.5 rounded-[16px] text-[0.8125rem] cursor-pointer transition-colors hover:bg-md-surfaceLow hover:text-md-onSurface ml-2 outline-none group" id="btnHelp">
             <i class="ri-question-line"></i>
-            <span>这是什么？</span>
+            <span class="max-[480px]:hidden">这是什么？</span>
           </button>
         </div>
 
-        <div class="actions">
-          <md-icon-button onclick="document.getElementById('folderInput').click()">
-            <i class="ri-folder-add-line"></i>
-          </md-icon-button>
+        <div class="flex items-center gap-1 relative text-md-onSurface">
+          <md-icon-button onclick="document.getElementById('folderInput').click()"><i class="ri-folder-add-line text-md-onSurface"></i></md-icon-button>
           <input type="file" id="folderInput" webkitdirectory directory multiple hidden>
-
-          <md-icon-button id="btnClipboard">
-            <i class="ri-clipboard-line"></i>
-          </md-icon-button>
-          
-          <md-icon-button onclick="document.getElementById('fileInput').click()">
-            <i class="ri-file-code-line"></i>
-          </md-icon-button>
+          <md-icon-button id="btnClipboard"><i class="ri-clipboard-line text-md-onSurface"></i></md-icon-button>
+          <md-icon-button onclick="document.getElementById('fileInput').click()"><i class="ri-file-code-line text-md-onSurface"></i></md-icon-button>
           <input type="file" id="fileInput" accept=".json" hidden>
+          <md-icon-button id="btnSettingsToggle"><i class="ri-settings-4-line text-md-onSurface"></i></md-icon-button>
           
-          <md-icon-button id="btnSettingsToggle">
-            <i class="ri-settings-4-line"></i>
-          </md-icon-button>
-          
-          <div class="dropdown-panel" id="settingsPanel"></div>
+          <div class="absolute top-full right-0 mt-2 bg-md-surface rounded-[16px] shadow-elevation-3 border border-md-outlineVariant w-[280px] p-4 z-[200] dropdown-transition dropdown-hidden cursor-default" id="settingsPanel"></div>
         </div>
       </header>
 
-      <main class="app-main" id="chatContainer">
-        <div class="empty-state">
-          <i class="ri-inbox-2-line"></i>
+      <main class="w-full max-w-[840px] mx-auto p-4 pb-[calc(72px+env(safe-area-inset-bottom))] flex flex-col gap-3" id="chatContainer">
+        <div class="flex flex-col items-center justify-center py-[10vh] text-md-onSurfaceVariant text-[0.9375rem] gap-2">
+          <i class="ri-inbox-2-line text-[2.5rem] opacity-40"></i>
           <span>暂无数据</span>
         </div>
       </main>
@@ -542,33 +239,18 @@
   </div>
 
   <script>
-    marked.use({
-      renderer: {
-        link({ href, title, text }) {
-          return `<a href="${href}" title="${title || ''}" target="_blank" rel="noopener">${text}</a>`;
-        }
-      }
-    });
+    marked.use({ renderer: { link({ href, title, text }) { return `<a href="${href}" title="${title || ''}" target="_blank" rel="noopener">${text}</a>`; } } });
     
-    const HELP_MARKDOWN = `
-本工具用于渲染简单 JSON 格式的 LLM 聊天记录，为油猴脚本 [Gemini 聊天记录导出助手 (Chat Dump)](https://greasyfork.org/zh-CN/scripts/569642-gemini-chat-dump-archivist) 编写。
-    `;
+    const HELP_MARKDOWN = `本工具用于渲染简单 JSON 格式的 LLM 聊天记录，为油猴脚本 [Gemini 聊天记录导出助手 (Chat Dump)](https://greasyfork.org/zh-CN/scripts/569642-gemini-chat-dump-archivist) 编写。`;
 
     const DOM = {
-      fileInput: document.getElementById('fileInput'),
-      folderInput: document.getElementById('folderInput'),
-      container: document.getElementById('chatContainer'),
-      btnClipboard: document.getElementById('btnClipboard'),
-      btnSettingsToggle: document.getElementById('btnSettingsToggle'),
-      btnSidebarToggle: document.getElementById('btnSidebarToggle'),
-      settingsPanel: document.getElementById('settingsPanel'),
-      sidebar: document.getElementById('sidebar'),
-      sidebarOverlay: document.getElementById('sidebarOverlay'),
-      fileList: document.getElementById('fileList'),
-      dndOverlay: document.getElementById('dndOverlay'),
-      btnHelp: document.getElementById('btnHelp'),
-      helpDialog: document.getElementById('helpDialog'),
-      helpDialogBody: document.getElementById('helpDialogBody'),
+      fileInput: document.getElementById('fileInput'), folderInput: document.getElementById('folderInput'),
+      container: document.getElementById('chatContainer'), btnClipboard: document.getElementById('btnClipboard'),
+      btnSettingsToggle: document.getElementById('btnSettingsToggle'), btnSidebarToggle: document.getElementById('btnSidebarToggle'),
+      settingsPanel: document.getElementById('settingsPanel'), sidebar: document.getElementById('sidebar'),
+      sidebarOverlay: document.getElementById('sidebarOverlay'), fileList: document.getElementById('fileList'),
+      dndOverlay: document.getElementById('dndOverlay'), btnHelp: document.getElementById('btnHelp'),
+      helpDialog: document.getElementById('helpDialog'), helpDialogBody: document.getElementById('helpDialogBody'),
       btnHelpConfirm: document.getElementById('btnHelpConfirm')
     };
 
@@ -576,56 +258,38 @@
       { key: '--font-size', label: '全局字号大小', type: 'number', def: 16, min: 12, max: 32, step: 1, unit: 'px' },
       { key: '--line-height', label: '正文行高', type: 'number', def: 1.6, min: 1.0, max: 3.0, step: 0.1, unit: '' },
       { key: '--code-line-height', label: '代码块行高', type: 'number', def: 1.4, min: 1.0, max: 3.0, step: 0.1, unit: '' },
-      { key: '--font-family', label: '字体族 (相对路径或名称)', type: 'string', def: './assets/font.woff2', placeholder: './assets/font.woff2' }
+      { key: '--font-family', label: '字体族或路径 (支持 https http)', type: 'string', def: './assets/font.woff2', placeholder: './assets/font.woff2' }
     ];
 
     const Workspace = {
       files: [],
       init(rawFiles) {
-        this.files = Array.from(rawFiles).filter(f => {
-          if (!f.name.toLowerCase().endsWith('.json')) return false;
-          if (!f.webkitRelativePath) return true;
-          return f.webkitRelativePath.split('/').length === 2;
-        });
+        this.files = Array.from(rawFiles).filter(f => f.name.toLowerCase().endsWith('.json') && (!f.webkitRelativePath || f.webkitRelativePath.split('/').length === 2));
         this.renderList();
         DOM.sidebar.classList.add('is-active');
-        DOM.sidebarOverlay.classList.add('is-active');
+        if(window.innerWidth <= 840) DOM.sidebarOverlay.classList.add('is-active');
       },
       renderList() {
         if (!this.files.length) {
-          DOM.fileList.innerHTML = `
-            <div class="empty-state" style="padding: 30vh 0;">
-              <i class="ri-file-warning-line"></i>
-              <span>未发现合法的顶层 JSON 文件</span>
-            </div>`;
+          DOM.fileList.innerHTML = `<div class="flex flex-col items-center justify-center py-[30vh] text-md-onSurfaceVariant text-[0.9375rem] gap-2"><i class="ri-file-warning-line text-[2.5rem] opacity-40"></i><span>未发现合法的顶层 JSON 文件</span></div>`;
           return;
         }
-        DOM.fileList.innerHTML = this.files.map((f, i) => `
-          <li class="file-item" data-idx="${i}">
-            <i class="ri-file-list-2-line"></i>
-            <span>${escapeHTML(f.name)}</span>
-          </li>
-        `).join('');
+        DOM.fileList.innerHTML = this.files.map((f, i) => `<li class="px-4 py-3 rounded-lg cursor-pointer text-[0.9375rem] text-md-onSurfaceVariant flex items-center gap-2 transition-colors hover:bg-md-surfaceLow hover:text-md-onSurface break-all file-item" data-idx="${i}"><i class="ri-file-list-2-line text-[1.25rem] shrink-0"></i><span>${escapeHTML(f.name)}</span></li>`).join('');
       },
       async loadFile(idx, node) {
-        if (node.classList.contains('is-error')) return;
+        if (node.classList.contains('text-md-error')) return;
         const file = this.files[idx];
         const reader = new FileReader();
-        
-        document.querySelectorAll('.file-item').forEach(el => el.classList.remove('is-selected'));
-        node.classList.add('is-selected');
-
+        document.querySelectorAll('.file-item').forEach(el => { el.classList.remove('bg-md-primary', 'text-white'); el.classList.add('text-md-onSurfaceVariant'); });
+        node.classList.remove('text-md-onSurfaceVariant');
+        node.classList.add('bg-md-primary', 'text-white');
         reader.onload = ev => {
           try {
             renderPipeline(ev.target.result);
-            if (window.innerWidth <= 840) {
-              DOM.sidebar.classList.remove('is-active');
-              DOM.sidebarOverlay.classList.remove('is-active');
-            }
+            if (window.innerWidth <= 840) { DOM.sidebar.classList.remove('is-active'); DOM.sidebarOverlay.classList.remove('is-active'); }
           } catch (err) {
-            node.classList.remove('is-selected');
-            node.classList.add('is-error');
-            node.innerHTML = `<i class="ri-error-warning-line"></i> <span>${escapeHTML(file.name)} (已损坏)</span>`;
+            node.classList.remove('bg-md-primary', 'text-white'); node.classList.add('text-md-error', 'cursor-not-allowed');
+            node.innerHTML = `<i class="ri-error-warning-line text-[1.25rem] shrink-0"></i> <span>${escapeHTML(file.name)} (已损坏)</span>`;
           }
         };
         reader.readAsText(file);
@@ -634,20 +298,31 @@
 
     const Store = {
       state: {},
+      applyTheme(theme) {
+        const isDark = theme === 'dark' || (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+        document.documentElement.classList.toggle('dark', isDark);
+      },
+      updateTheme(theme) {
+        this.state.theme = theme;
+        localStorage.setItem('renderer_settings', JSON.stringify(this.state));
+        this.applyTheme(theme);
+        document.querySelectorAll('.theme-btn').forEach(btn => {
+          if (btn.dataset.theme === theme) btn.className = 'flex-1 py-1.5 rounded-md text-[0.8125rem] font-medium theme-btn transition-colors bg-md-surface shadow-segment text-md-onSurface border border-md-outlineVariant/50';
+          else btn.className = 'flex-1 py-1.5 rounded-md text-[0.8125rem] font-medium theme-btn transition-colors text-md-onSurfaceVariant hover:text-md-onSurface border border-transparent';
+        });
+      },
       async applyFont(val) {
-        if (!val) {
-          document.documentElement.style.setProperty('--font-family', 'var(--font-fallback)');
-          return;
-        }
-        if (val.includes('/') || val.includes('.')) {
-          const encodedUrl = encodeURI(val);
+        if (!val) return document.documentElement.style.setProperty('--font-family', 'var(--font-fallback)');
+        const isUrl = val.includes('/') || val.includes('.') || val.startsWith('http');
+        if (isUrl) {
           const fontName = 'DynamicFont_' + Math.random().toString(36).substring(2, 8);
-          const fontFace = new FontFace(fontName, `url("${encodedUrl}")`);
           try {
+            const fontFace = new FontFace(fontName, `url("${encodeURI(val)}")`);
             await fontFace.load();
             document.fonts.add(fontFace);
             document.documentElement.style.setProperty('--font-family', `"${fontName}", var(--font-fallback)`);
-          } catch (err) {
+            return;
+          } catch {
             document.documentElement.style.setProperty('--font-family', val);
           }
         } else {
@@ -657,81 +332,61 @@
       update(key, rawVal) {
         const schema = SettingsSchema.find(s => s.key === key);
         if (!schema) return;
-
         let finalVal = rawVal;
         if (schema.type === 'number') {
-          let num = parseFloat(rawVal);
-          if (isNaN(num)) num = schema.def;
+          let num = isNaN(parseFloat(rawVal)) ? schema.def : parseFloat(rawVal);
           num = Math.max(schema.min, Math.min(schema.max, num));
-          const precision = (schema.step.toString().split('.')[1] || '').length;
-          finalVal = num.toFixed(precision) + schema.unit;
+          finalVal = num.toFixed((schema.step.toString().split('.')[1] || '').length) + schema.unit;
         }
-
         this.state[key] = finalVal;
         localStorage.setItem('renderer_settings', JSON.stringify(this.state));
-
         const input = document.querySelector(`input[data-key="${key}"]`);
         if (input) input.value = schema.type === 'number' ? finalVal.replace(schema.unit, '') : finalVal;
-
         if (key === '--font-family') this.applyFont(finalVal);
         else document.documentElement.style.setProperty(key, finalVal || schema.def + (schema.unit || ''));
       },
       init() {
         this.state = JSON.parse(localStorage.getItem('renderer_settings') || '{}');
-        DOM.settingsPanel.innerHTML = SettingsSchema.map(s => {
+        if (!this.state.theme) this.state.theme = 'system';
+        this.applyTheme(this.state.theme);
+
+        const themeHTML = `<div class="flex flex-col gap-2 mb-6"><label class="text-[0.75rem] text-md-onSurfaceVariant font-semibold uppercase tracking-[0.05em]">外观模式</label><div class="flex bg-md-surfaceLow p-[3px] rounded-lg border border-md-outlineVariant"><button class="flex-1 py-1.5 rounded-md text-[0.8125rem] font-medium theme-btn transition-colors ${this.state.theme === 'system' ? 'bg-md-surface shadow-segment text-md-onSurface border border-md-outlineVariant/50' : 'text-md-onSurfaceVariant hover:text-md-onSurface border border-transparent'}" data-theme="system">跟随系统</button><button class="flex-1 py-1.5 rounded-md text-[0.8125rem] font-medium theme-btn transition-colors ${this.state.theme === 'light' ? 'bg-md-surface shadow-segment text-md-onSurface border border-md-outlineVariant/50' : 'text-md-onSurfaceVariant hover:text-md-onSurface border border-transparent'}" data-theme="light">亮色模式</button><button class="flex-1 py-1.5 rounded-md text-[0.8125rem] font-medium theme-btn transition-colors ${this.state.theme === 'dark' ? 'bg-md-surface shadow-segment text-md-onSurface border border-md-outlineVariant/50' : 'text-md-onSurfaceVariant hover:text-md-onSurface border border-transparent'}" data-theme="dark">暗黑模式</button></div></div>`;
+
+        const itemsHTML = SettingsSchema.map(s => {
           let currentVal = this.state[s.key] !== undefined ? this.state[s.key] : (s.def + (s.unit || ''));
           this.state[s.key] = currentVal;
-          
           if (s.key === '--font-family' && currentVal) this.applyFont(currentVal);
           else document.documentElement.style.setProperty(s.key, currentVal);
 
+          const labelHTML = `<div class="flex justify-between items-center"><label class="text-[0.75rem] text-md-onSurfaceVariant font-semibold uppercase tracking-[0.05em]">${s.label}</label><button class="reset-btn text-[1rem] text-md-onSurfaceVariant hover:text-md-primary hover:bg-md-surfaceLow transition-colors cursor-pointer w-7 h-7 flex items-center justify-center rounded-md outline-none" data-key="${s.key}"><i class="ri-refresh-line pointer-events-none"></i></button></div>`;
+
           if (s.type === 'number') {
-            const displayVal = currentVal.replace(s.unit, '');
-            return `
-              <div class="setting-item">
-                <label>${s.label}</label>
-                <div class="setting-control-group">
-                  <button class="step-btn" data-key="${s.key}" data-action="-1"><i class="ri-subtract-line"></i></button>
-                  <input type="text" data-key="${s.key}" value="${displayVal}">
-                  <button class="step-btn" data-key="${s.key}" data-action="1"><i class="ri-add-line"></i></button>
-                </div>
-              </div>`;
+            return `<div class="flex flex-col gap-2 mb-6 last:mb-0">${labelHTML}<div class="flex items-center gap-2"><button class="step-btn bg-md-surfaceLow border border-md-outlineVariant text-md-onSurfaceVariant rounded-lg w-11 h-11 flex items-center justify-center cursor-pointer shrink-0 transition-colors hover:bg-md-outlineVariant hover:text-md-onSurface active:opacity-70 text-[1.25rem] outline-none" data-key="${s.key}" data-action="-1"><i class="ri-subtract-line pointer-events-none"></i></button><input type="text" data-key="${s.key}" value="${currentVal.replace(s.unit, '')}" class="w-full text-center py-3 px-3.5 border border-md-outlineVariant rounded-lg font-inherit text-[0.9375rem] outline-none bg-md-surfaceLow text-md-onSurface transition-colors focus:border-md-primary focus:bg-md-surface"><button class="step-btn bg-md-surfaceLow border border-md-outlineVariant text-md-onSurfaceVariant rounded-lg w-11 h-11 flex items-center justify-center cursor-pointer shrink-0 transition-colors hover:bg-md-outlineVariant hover:text-md-onSurface active:opacity-70 text-[1.25rem] outline-none" data-key="${s.key}" data-action="1"><i class="ri-add-line pointer-events-none"></i></button></div></div>`;
           }
-          return `
-            <div class="setting-item">
-              <label>${s.label}</label>
-              <input type="text" data-key="${s.key}" placeholder="${s.placeholder || ''}" value="${currentVal}">
-            </div>`;
+          return `<div class="flex flex-col gap-2 mb-6 last:mb-0">${labelHTML}<input type="text" data-key="${s.key}" placeholder="${s.placeholder || ''}" value="${currentVal}" class="w-full py-3 px-3.5 border border-md-outlineVariant rounded-lg font-inherit text-[0.9375rem] outline-none bg-md-surfaceLow text-md-onSurface transition-colors focus:border-md-primary focus:bg-md-surface"></div>`;
         }).join('');
+
+        DOM.settingsPanel.innerHTML = themeHTML + itemsHTML;
       }
     };
 
-    const escapeHTML = str => {
-      const div = document.createElement('div');
-      div.textContent = str;
-      return div.innerHTML;
-    };
-
-    const getFirstLine = str => {
-      const match = (str || '').match(/([^\n]+)/);
-      return match ? escapeHTML(match[0].replace(/^[#*>\-]+\s*/, '').trim()) : '';
-    };
+    const escapeHTML = str => { const div = document.createElement('div'); div.textContent = str; return div.innerHTML; };
+    const getFirstLine = str => { const match = (str || '').match(/([^\n]+)/); return match ? escapeHTML(match[0].replace(/^[#*>\-]+\s*/, '').trim()) : ''; };
 
     const renderPipeline = (rawString) => {
       const data = JSON.parse(rawString);
       if (!Array.isArray(data)) throw new Error('Root must be an array');
-      
       DOM.container.innerHTML = data.map((msg, idx) => `
-        <div class="message is-collapsed">
-          <div class="message-header">
+        <div class="message is-collapsed bg-md-surface border border-md-msgBorder rounded-[24px] relative overflow-hidden shadow-[0px_1px_2px_0px_rgba(0,0,0,0.02)] group transition-colors duration-300">
+          <div class="message-header p-[18px_24px] flex items-center gap-4 cursor-pointer select-none relative border-b border-transparent transition-colors duration-200 ease-[cubic-bezier(0.2,0,0,1)] group-[&:not(.is-collapsed)]:border-md-msgBorderHover">
             <md-ripple></md-ripple>
-            <span class="message-num">#${idx + 1}</span>
-            <span class="message-role">${escapeHTML(msg.role)}</span>
-            <span class="message-preview">${getFirstLine(msg.content)}</span>
+            <span class="text-[0.75rem] font-bold text-md-onSurfaceVariant opacity-50 shrink-0">#${idx + 1}</span>
+            <span class="text-[0.9375rem] font-semibold tracking-[0.02em] text-md-onSurface whitespace-nowrap shrink-0">${escapeHTML(msg.role)}</span>
+            <span class="message-preview text-[0.9375rem] text-md-onSurfaceVariant whitespace-nowrap overflow-hidden text-ellipsis flex-1">${getFirstLine(msg.content)}</span>
           </div>
           <div class="message-body">
             <div class="message-body-inner">
-              <div class="message-content md-body">${marked.parse(msg.content)}</div>
+              <div class="p-[16px_24px_24px] break-words text-md-onSurface md-body">${marked.parse(msg.content)}</div>
             </div>
           </div>
         </div>
@@ -741,161 +396,114 @@
     const bindEvents = () => {
       Store.init();
 
-      DOM.folderInput.addEventListener('change', (e) => {
-        Workspace.init(e.target.files);
-        e.target.value = '';
-      });
+      DOM.folderInput.addEventListener('change', e => { Workspace.init(e.target.files); e.target.value = ''; });
+      DOM.fileList.addEventListener('click', e => { const item = e.target.closest('.file-item'); if (item) Workspace.loadFile(item.dataset.idx, item); });
 
-      DOM.fileList.addEventListener('click', (e) => {
-        const item = e.target.closest('.file-item');
-        if (item) Workspace.loadFile(item.dataset.idx, item);
-      });
-
-      const toggleSidebar = () => {
-        DOM.sidebar.classList.toggle('is-active');
-        DOM.sidebarOverlay.classList.toggle('is-active');
-      };
-
+      const toggleSidebar = () => { DOM.sidebar.classList.toggle('is-active'); DOM.sidebarOverlay.classList.toggle('is-active'); };
       DOM.btnSidebarToggle.addEventListener('click', toggleSidebar);
       DOM.sidebarOverlay.addEventListener('click', toggleSidebar);
 
-      DOM.fileInput.addEventListener('change', (e) => {
-        const file = e.target.files[0];
-        if (!file) return;
+      window.matchMedia('(min-width: 841px)').addEventListener('change', e => {
+        if (e.matches) DOM.sidebarOverlay.classList.remove('is-active');
+        else if (DOM.sidebar.classList.contains('is-active')) DOM.sidebarOverlay.classList.add('is-active');
+      });
+
+      window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+        if (Store.state.theme === 'system') Store.applyTheme('system');
+      });
+
+      DOM.fileInput.addEventListener('change', e => {
+        const file = e.target.files[0]; if (!file) return;
         const reader = new FileReader();
-        reader.onload = ev => {
-          try { renderPipeline(ev.target.result); } 
-          catch (err) { alert(`数据解析异常: ${err.message}`); }
-        };
-        reader.readAsText(file);
-        e.target.value = '';
+        reader.onload = ev => { try { renderPipeline(ev.target.result); } catch (err) { alert(`数据解析异常: ${err.message}`); } };
+        reader.readAsText(file); e.target.value = '';
       });
 
       DOM.btnClipboard.addEventListener('click', async () => {
-        try {
-          const text = await navigator.clipboard.readText();
-          if (text.trim().startsWith('[')) renderPipeline(text);
-        } catch (err) {
-          alert('剪贴板读取被拒绝，请检查权限。');
-        }
+        try { const text = await navigator.clipboard.readText(); if (text.trim().startsWith('[')) renderPipeline(text); } catch { alert('剪贴板读取被拒绝，请检查权限。'); }
       });
 
-      document.addEventListener('paste', (e) => {
+      document.addEventListener('paste', e => {
         if (e.target.tagName === 'INPUT') return;
         const text = (e.clipboardData || window.clipboardData).getData('text').trim();
-        if (text.startsWith('[')) {
-          e.preventDefault();
-          try { renderPipeline(text); } 
-          catch (err) { alert(`数据解析异常: ${err.message}`); }
-        }
+        if (text.startsWith('[')) { e.preventDefault(); try { renderPipeline(text); } catch (err) { alert(`数据解析异常: ${err.message}`); } }
       });
 
-      DOM.container.addEventListener('click', (e) => {
+      DOM.container.addEventListener('click', e => {
         const headerNode = e.target.closest('.message-header');
-        if (!headerNode) return;
-        if (window.getSelection().toString().length > 0) return;
-        const msgNode = headerNode.closest('.message');
-        msgNode.classList.toggle('is-collapsed');
+        if (!headerNode || window.getSelection().toString().length > 0) return;
+        headerNode.closest('.message').classList.toggle('is-collapsed');
       });
 
-      DOM.btnSettingsToggle.addEventListener('click', (e) => {
+      DOM.btnSettingsToggle.addEventListener('click', e => {
         e.stopPropagation();
-        DOM.settingsPanel.classList.toggle('is-active');
+        const isActive = DOM.settingsPanel.classList.contains('dropdown-visible');
+        if (isActive) { DOM.settingsPanel.classList.replace('dropdown-visible', 'dropdown-hidden'); } 
+        else { DOM.settingsPanel.classList.replace('dropdown-hidden', 'dropdown-visible'); }
       });
 
-      document.addEventListener('click', (e) => {
-        if (!DOM.settingsPanel.contains(e.target) && !DOM.btnSettingsToggle.contains(e.target)) {
-          DOM.settingsPanel.classList.remove('is-active');
+      document.addEventListener('click', e => {
+        if (!DOM.settingsPanel.contains(e.target) && !DOM.btnSettingsToggle.contains(e.target)) DOM.settingsPanel.classList.replace('dropdown-visible', 'dropdown-hidden');
+      });
+
+      DOM.settingsPanel.addEventListener('change', e => { if (e.target.tagName === 'INPUT') Store.update(e.target.dataset.key, e.target.value.trim()); });
+      
+      DOM.settingsPanel.addEventListener('click', e => {
+        const resetBtn = e.target.closest('.reset-btn');
+        if (resetBtn) {
+          const key = resetBtn.dataset.key;
+          const schema = SettingsSchema.find(s => s.key === key);
+          Store.update(key, schema.def + (schema.unit || ''));
+          return;
+        }
+        const themeBtn = e.target.closest('.theme-btn');
+        if (themeBtn) {
+          Store.updateTheme(themeBtn.dataset.theme);
+          return;
+        }
+        const stepBtn = e.target.closest('.step-btn');
+        if (stepBtn) {
+          const key = stepBtn.dataset.key; const schema = SettingsSchema.find(s => s.key === key);
+          Store.update(key, (isNaN(parseFloat(Store.state[key])) ? schema.def : parseFloat(Store.state[key])) + (parseInt(stepBtn.dataset.action) * schema.step));
         }
       });
 
-      DOM.settingsPanel.addEventListener('change', (e) => {
-        if (e.target.tagName !== 'INPUT') return;
-        Store.update(e.target.dataset.key, e.target.value.trim());
-      });
-
-      DOM.settingsPanel.addEventListener('click', (e) => {
-        const btn = e.target.closest('.step-btn');
-        if (!btn) return;
-        const key = btn.dataset.key;
-        const schema = SettingsSchema.find(s => s.key === key);
-        const action = parseInt(btn.dataset.action);
-        
-        let currentNum = parseFloat(Store.state[key]);
-        if (isNaN(currentNum)) currentNum = schema.def;
-        
-        Store.update(key, currentNum + (action * schema.step));
-      });
-
-      // Help Dialog Logic
       DOM.helpDialogBody.innerHTML = marked.parse(HELP_MARKDOWN);
       DOM.btnHelp.addEventListener('click', () => {
-        DOM.helpDialog.classList.add('is-active');
+        DOM.helpDialog.classList.remove('opacity-0', 'invisible'); DOM.helpDialog.classList.add('opacity-100', 'visible');
+        DOM.helpDialog.querySelector('.dialog-surface-inner').classList.replace('scale-95', 'scale-100');
+        DOM.helpDialog.querySelector('.dialog-surface-inner').classList.replace('translate-y-2.5', 'translate-y-0');
       });
-      const closeHelpDialog = () => DOM.helpDialog.classList.remove('is-active');
+      const closeHelpDialog = () => {
+        DOM.helpDialog.classList.add('opacity-0', 'invisible'); DOM.helpDialog.classList.remove('opacity-100', 'visible');
+        DOM.helpDialog.querySelector('.dialog-surface-inner').classList.replace('scale-100', 'scale-95');
+        DOM.helpDialog.querySelector('.dialog-surface-inner').classList.replace('translate-y-0', 'translate-y-2.5');
+      };
       DOM.btnHelpConfirm.addEventListener('click', closeHelpDialog);
-      DOM.helpDialog.addEventListener('click', (e) => {
-        if (e.target === DOM.helpDialog) closeHelpDialog();
-      });
+      DOM.helpDialog.addEventListener('click', e => { if (e.target === DOM.helpDialog) closeHelpDialog(); });
 
-      // Drag and Drop Logic
       let dragCount = 0;
-      document.addEventListener('dragenter', e => {
-        e.preventDefault();
-        if (dragCount++ === 0) DOM.dndOverlay.classList.add('is-active');
-      });
-      document.addEventListener('dragleave', e => {
-        e.preventDefault();
-        if (--dragCount === 0) DOM.dndOverlay.classList.remove('is-active');
-      });
+      document.addEventListener('dragenter', e => { e.preventDefault(); if (dragCount++ === 0) { DOM.dndOverlay.classList.remove('opacity-0', 'invisible'); DOM.dndOverlay.classList.add('opacity-100', 'visible'); DOM.dndOverlay.querySelector('.dnd-content-inner').classList.replace('scale-95', 'scale-100'); } });
+      document.addEventListener('dragleave', e => { e.preventDefault(); if (--dragCount === 0) { DOM.dndOverlay.classList.add('opacity-0', 'invisible'); DOM.dndOverlay.classList.remove('opacity-100', 'visible'); DOM.dndOverlay.querySelector('.dnd-content-inner').classList.replace('scale-100', 'scale-95'); } });
       document.addEventListener('dragover', e => e.preventDefault());
       document.addEventListener('drop', async e => {
-        e.preventDefault();
-        dragCount = 0;
-        DOM.dndOverlay.classList.remove('is-active');
-
-        const items = e.dataTransfer.items;
-        if (!items) return;
-
+        e.preventDefault(); dragCount = 0;
+        DOM.dndOverlay.classList.add('opacity-0', 'invisible'); DOM.dndOverlay.classList.remove('opacity-100', 'visible'); DOM.dndOverlay.querySelector('.dnd-content-inner').classList.replace('scale-100', 'scale-95');
+        const items = e.dataTransfer.items; if (!items) return;
         const files = [];
         const traverse = async (entry, path = '') => {
-          if (entry.isFile) {
-            const file = await new Promise(r => entry.file(r));
-            Object.defineProperty(file, 'webkitRelativePath', { value: path ? path + file.name : '' });
-            files.push(file);
-          } else if (entry.isDirectory) {
-            const reader = entry.createReader();
-            const entries = await new Promise(r => reader.readEntries(r));
-            for (let child of entries) await traverse(child, path + entry.name + '/');
-          }
+          if (entry.isFile) { const file = await new Promise(r => entry.file(r)); Object.defineProperty(file, 'webkitRelativePath', { value: path ? path + file.name : '' }); files.push(file); } 
+          else if (entry.isDirectory) { const reader = entry.createReader(); for (let child of await new Promise(r => reader.readEntries(r))) await traverse(child, path + entry.name + '/'); }
         };
-
-        for (let i = 0; i < items.length; i++) {
-          const entry = items[i].webkitGetAsEntry();
-          if (entry) await traverse(entry);
-        }
-
-        const jsonFiles = files.filter(f => f.name.toLowerCase().endsWith('.json'));
-        if (!jsonFiles.length) return;
-
-        if (jsonFiles.length === 1 && files.length === 1) {
-          const reader = new FileReader();
-          reader.onload = ev => {
-            try { renderPipeline(ev.target.result); } 
-            catch (err) { alert(`数据解析异常: ${err.message}`); }
-          };
-          reader.readAsText(jsonFiles[0]);
-        } else {
-          Workspace.init(jsonFiles);
-        }
+        for (let i = 0; i < items.length; i++) { const entry = items[i].webkitGetAsEntry(); if (entry) await traverse(entry); }
+        const jsonFiles = files.filter(f => f.name.toLowerCase().endsWith('.json')); if (!jsonFiles.length) return;
+        if (jsonFiles.length === 1 && files.length === 1) { const reader = new FileReader(); reader.onload = ev => { try { renderPipeline(ev.target.result); } catch (err) { alert(`数据解析异常: ${err.message}`); } }; reader.readAsText(jsonFiles[0]); } 
+        else Workspace.init(jsonFiles);
       });
     };
 
     bindEvents();
-
-    if (window.innerWidth <= 840) {
-      DOM.sidebar.classList.remove('is-active');
-    }
+    if (window.innerWidth <= 840) DOM.sidebar.classList.remove('is-active');
   </script>
 </body>
 </html>
