@@ -13,6 +13,8 @@
         crossorigin="anonymous" referrerpolicy="no-referrer" />
     <style>
         :root {
+            --font-fallback: 'Noto Sans SC', system-ui, sans-serif;
+            --font-family: var(--font-fallback);
             --stripe-width: 15px;
             --angle: 45deg;
             --speed: 3s;
@@ -25,7 +27,7 @@
         }
 
         body {
-            font-family: 'Noto Sans SC', system-ui, sans-serif;
+            font-family: var(--font-family);
             background-color: var(--bg-color);
             background-image: repeating-linear-gradient(var(--angle), var(--stripe-color), var(--stripe-color) var(--stripe-width), var(--bg-color) var(--stripe-width), var(--bg-color) var(--full-width));
             background-size: var(--size-x) var(--size-y);
@@ -132,6 +134,7 @@
 
     <script>
         const siteData = {
+            font: "./renderer/assets/font.woff2",
             profile: {
                 title: "Yumeka の 主页",
                 avatar: "./assets/avatar.jpg",
@@ -208,6 +211,24 @@
                 ]
             },
             footer: "&copy; 2025-2026 Yumeka <a href='mailto:miniyu157@163.com' class='hover:text-purple-400 transition-colors duration-300'>&ltminiyu157@163.com&gt</a>. Released under the MIT License."
+        };
+
+        const applyFont = async (val) => {
+            if (!val) return document.documentElement.style.setProperty('--font-family', 'var(--font-fallback)');
+            const isUrl = val.includes('/') || val.includes('.') || val.startsWith('http');
+            if (isUrl) {
+                const fontName = 'DynamicFont_' + Math.random().toString(36).substring(2, 8);
+                try {
+                    const fontFace = new FontFace(fontName, `url("${encodeURI(val)}")`);
+                    await fontFace.load();
+                    document.fonts.add(fontFace);
+                    document.documentElement.style.setProperty('--font-family', `"${fontName}", var(--font-fallback)`);
+                } catch {
+                    document.documentElement.style.setProperty('--font-family', val);
+                }
+            } else {
+                document.documentElement.style.setProperty('--font-family', val);
+            }
         };
 
         const generateHTML = (data) => {
@@ -301,6 +322,7 @@
             `;
         };
 
+        applyFont(siteData.font);
         document.getElementById('app').innerHTML = generateHTML(siteData);
 
         const toast = document.getElementById('toast');
